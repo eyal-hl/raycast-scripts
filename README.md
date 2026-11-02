@@ -1,29 +1,33 @@
-# raycast-rain
+# raycast-scripts
 
-Confetti's gloomy cousin. Two [Raycast](https://raycast.com) script commands that cover your screen with grey clouds and rain for a few seconds:
+A collection of [Raycast](https://raycast.com) script commands.
 
-- **Rain** 🌧️ — grey sky, clouds, steady rain.
-- **Thunderstorm** ⛈️ — darker sky, heavier rain, lightning.
+| Command | What it does |
+|---------|--------------|
+| **Rain** 🌧️ | Confetti's gloomy cousin: grey sky, clouds and steady rain over your screen for a few seconds. |
+| **Thunderstorm** ⛈️ | Darker sky, heavier rain, lightning. |
 
-The overlay ignores clicks, so you can keep working while it rains. It fades out on its own.
+The weather overlays ignore clicks, so you can keep working while it rains. They fade out on their own.
 
 ## Install
 
 Needs macOS and the Xcode command line tools (`xcode-select --install`).
 
 ```bash
-git clone https://github.com/eyal-hl/raycast-rain.git ~/raycast-rain
+git clone https://github.com/eyal-hl/raycast-scripts.git ~/raycast-scripts
 ```
 
 Then add the folder to Raycast:
 
 1. Open Raycast, search **Search Script Commands** and press Enter.
 2. Choose **Add Script Command Folder** (or press ⌘K to find it).
-3. In the folder picker press ⌘⇧G, paste `~/raycast-rain`, press Enter and click **Open**.
+3. In the folder picker press ⌘⇧G, paste `~/raycast-scripts`, press Enter and click **Open**.
 
-Search **Rain** or **Thunderstorm**. The first run compiles the Swift overlay, so it takes a few seconds; after that it starts instantly.
+Every script in the folder shows up as a command. Rain and Thunderstorm compile their Swift overlay on the first run, so that one takes a few seconds.
 
-## Run from the terminal
+To get new commands later, `git pull` in the folder.
+
+## Weather from the terminal
 
 ```bash
 ./rain             # rain for 12 seconds
