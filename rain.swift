@@ -7,6 +7,8 @@ let args = CommandLine.arguments.dropFirst()
 let storm = args.contains("storm")
 let duration = args.compactMap(Double.init).first ?? (storm ? 14 : 12)
 let rgb = CGColorSpaceCreateDeviceRGB()
+// Tuned on a 14" MacBook at its default 1512pt width; bigger screens scale up from there.
+let referenceWidth: CGFloat = 1512
 
 func bitmap(_ w: Int, _ h: Int) -> CGContext {
     CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
@@ -82,17 +84,18 @@ func flicker(_ layer: CALayer, peak: Float) {
 }
 
 func strike(_ root: CALayer, _ flash: CALayer, _ size: CGSize) {
+    let k = size.width / referenceWidth
     let path = CGMutablePath()
-    var p = CGPoint(x: .random(in: size.width * 0.15...size.width * 0.85), y: size.height - 120)
+    var p = CGPoint(x: .random(in: size.width * 0.15...size.width * 0.85), y: size.height - 120 * k)
     path.move(to: p)
     let bottom = CGFloat.random(in: 0...size.height * 0.4)
     while p.y > bottom {
-        p = CGPoint(x: p.x + .random(in: -45...45), y: p.y - .random(in: 25...70))
+        p = CGPoint(x: p.x + .random(in: -45...45) * k, y: p.y - .random(in: 25...70) * k)
         path.addLine(to: p)
         if Int.random(in: 0..<6) == 0 {
             var b = p
             for _ in 0..<Int.random(in: 2...5) {
-                b = CGPoint(x: b.x + .random(in: -60...60), y: b.y - .random(in: 20...50))
+                b = CGPoint(x: b.x + .random(in: -60...60) * k, y: b.y - .random(in: 20...50) * k)
                 path.addLine(to: b)
             }
             path.move(to: p)
@@ -102,10 +105,10 @@ func strike(_ root: CALayer, _ flash: CALayer, _ size: CGSize) {
     bolt.path = path
     bolt.strokeColor = CGColor(red: 0.95, green: 0.97, blue: 1, alpha: 1)
     bolt.fillColor = nil
-    bolt.lineWidth = 2.5
+    bolt.lineWidth = 2.5 * k
     bolt.lineJoin = .miter
     bolt.shadowColor = CGColor(red: 0.6, green: 0.7, blue: 1, alpha: 1)
-    bolt.shadowRadius = 12
+    bolt.shadowRadius = 12 * k
     bolt.shadowOpacity = 1
     bolt.shadowOffset = .zero
     bolt.opacity = 0
@@ -133,17 +136,20 @@ final class Scene {
 
         // One looping layer per drop; CAEmitterLayer only drew in the top-left of this overlay window.
         let drop = dropImage()
-        for _ in 0..<(storm ? 700 : 400) {
+        let k = size.width / referenceWidth
+        let referenceArea = referenceWidth * referenceWidth / 1.54
+        let drops = CGFloat(storm ? 700 : 400) * size.width * size.height / referenceArea
+        for _ in 0..<Int(drops) {
             let d = CALayer()
-            let s = CGFloat.random(in: 0.3...0.6)
+            let s = CGFloat.random(in: 0.3...0.6) * k
             d.contents = drop
             d.bounds = CGRect(x: 0, y: 0, width: 3 * s, height: 80 * s)
             d.opacity = .random(in: 0.4...1)
             d.position = CGPoint(x: -100, y: -100)
             let x = CGFloat.random(in: 0...size.width)
             let fall = CABasicAnimation(keyPath: "position")
-            fall.fromValue = CGPoint(x: x, y: size.height + 50)
-            fall.toValue = CGPoint(x: x, y: -50)
+            fall.fromValue = CGPoint(x: x, y: size.height + 50 * k)
+            fall.toValue = CGPoint(x: x, y: -50 * k)
             fall.duration = .random(in: 0.55...0.9)
             fall.timeOffset = .random(in: 0...fall.duration)
             fall.repeatCount = .infinity
@@ -152,8 +158,8 @@ final class Scene {
         }
         root.addSublayer(rain)
 
-        addClouds(root, size, shade: storm ? 0.22 : 0.38, height: size.height * 0.32, drift: 60)
-        addClouds(root, size, shade: storm ? 0.3 : 0.48, height: size.height * 0.22, drift: -90)
+        addClouds(root, size, shade: storm ? 0.22 : 0.38, height: size.height * 0.32, drift: 60 * k)
+        addClouds(root, size, shade: storm ? 0.3 : 0.48, height: size.height * 0.22, drift: -90 * k)
         if storm { flash = flashLayer(root, size) }
 
         let fade = CABasicAnimation(keyPath: "opacity")
