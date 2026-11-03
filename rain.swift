@@ -1,14 +1,16 @@
 // Gloomy rain overlay for Raycast. Build: swiftc -O rain.swift -o rain
-// Usage: rain [storm] [seconds]
+// Usage: rain [storm | money] [seconds]
 import AppKit
 import QuartzCore
 
 let args = CommandLine.arguments.dropFirst()
 let storm = args.contains("storm")
-let duration = args.compactMap(Double.init).first ?? (storm ? 14 : 12)
+let money = args.contains("money")
+let duration = args.compactMap(Double.init).first ?? (storm ? 14 : money ? 8 : 12)
 let rgb = CGColorSpaceCreateDeviceRGB()
 // Tuned on a 14" MacBook at its default 1512pt width; bigger screens scale up from there.
 let referenceWidth: CGFloat = 1512
+let referenceArea = referenceWidth * referenceWidth / 1.54
 
 func bitmap(_ w: Int, _ h: Int) -> CGContext {
     CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
@@ -118,6 +120,45 @@ func strike(_ root: CALayer, _ flash: CALayer, _ size: CGSize) {
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { bolt.removeFromSuperlayer() }
 }
 
+func emojiImage(_ emoji: String, _ side: Int) -> CGImage {
+    let ctx = bitmap(side, side)
+    NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+    let text = NSAttributedString(string: emoji, attributes: [.font: NSFont.systemFont(ofSize: CGFloat(side) * 0.8)])
+    let s = text.size()
+    text.draw(at: CGPoint(x: (CGFloat(side) - s.width) / 2, y: (CGFloat(side) - s.height) / 2))
+    NSGraphicsContext.current = nil
+    return ctx.makeImage()!
+}
+
+// Bills and coins tumbling down instead of raindrops, no clouds.
+func addMoney(_ root: CALayer, _ size: CGSize) {
+    let k = size.width / referenceWidth
+    let images = ["💸", "💵", "💰", "🪙"].map { emojiImage($0, 128) }
+    let now = CACurrentMediaTime()
+    for _ in 0..<Int(110 * size.width * size.height / referenceArea) {
+        let bill = CALayer()
+        let s = CGFloat.random(in: 34...54) * k
+        bill.contents = images.randomElement()!
+        bill.bounds = CGRect(x: 0, y: 0, width: s, height: s)
+        bill.position = CGPoint(x: -100, y: -100)
+        let x = CGFloat.random(in: 0...size.width)
+        let fall = CABasicAnimation(keyPath: "position")
+        fall.fromValue = CGPoint(x: x, y: size.height + s)
+        fall.toValue = CGPoint(x: x + .random(in: -120...120) * k, y: -s)
+        fall.duration = .random(in: 2.5...4.5)
+        // Staggered starts so it begins at the top instead of mid-screen.
+        fall.beginTime = now + .random(in: 0...fall.duration)
+        fall.repeatCount = .infinity
+        bill.add(fall, forKey: "fall")
+        let spin = CABasicAnimation(keyPath: "transform.rotation.z")
+        spin.toValue = CGFloat.random(in: -2...2) * .pi
+        spin.duration = .random(in: 1.5...4)
+        spin.repeatCount = .infinity
+        bill.add(spin, forKey: "spin")
+        root.addSublayer(bill)
+    }
+}
+
 final class Scene {
     let root: CALayer
     let size: CGSize
@@ -137,7 +178,6 @@ final class Scene {
         // One looping layer per drop; CAEmitterLayer only drew in the top-left of this overlay window.
         let drop = dropImage()
         let k = size.width / referenceWidth
-        let referenceArea = referenceWidth * referenceWidth / 1.54
         let drops = CGFloat(storm ? 700 : 400) * size.width * size.height / referenceArea
         for _ in 0..<Int(drops) {
             let d = CALayer()
@@ -174,6 +214,7 @@ app.setActivationPolicy(.accessory)
 
 var windows: [NSWindow] = []
 var scenes: [Scene] = []
+var roots: [CALayer] = []
 for screen in NSScreen.screens {
     let window = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     window.isOpaque = false
@@ -186,7 +227,8 @@ for screen in NSScreen.screens {
     view.wantsLayer = true
     window.contentView = view
     window.setFrame(screen.frame, display: false)
-    scenes.append(Scene(root: view.layer!, size: screen.frame.size))
+    if money { addMoney(view.layer!, screen.frame.size) } else { scenes.append(Scene(root: view.layer!, size: screen.frame.size)) }
+    roots.append(view.layer!)
     window.orderFrontRegardless()
     windows.append(window)
 }
@@ -201,7 +243,7 @@ DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
     CATransaction.begin()
     CATransaction.setAnimationDuration(2)
     CATransaction.setCompletionBlock { exit(0) }
-    scenes.forEach { $0.root.opacity = 0 }
+    roots.forEach { $0.opacity = 0 }
     CATransaction.commit()
 }
 

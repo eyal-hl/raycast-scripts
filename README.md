@@ -6,8 +6,10 @@ A collection of [Raycast](https://raycast.com) script commands.
 |---------|--------------|
 | **Rain** 🌧️ | Confetti's gloomy cousin: grey sky, clouds and steady rain over your screen for a few seconds. |
 | **Thunderstorm** ⛈️ | Darker sky, heavier rain, lightning. |
+| **Money Rain** 💸 | Bills and coins tumble down your screen instead of raindrops. |
+| **Spotlight** 🔦 | Dims everything except a soft circle that follows your cursor. Run it again to turn it off. |
 
-The weather overlays ignore clicks, so you can keep working while it rains. They fade out on their own.
+The overlays ignore clicks, so you can keep working while it rains. The weather ones fade out on their own.
 
 ## Install
 
@@ -23,7 +25,7 @@ Then add the folder to Raycast:
 2. Choose **Add Script Command Folder** (or press ⌘K to find it).
 3. In the folder picker press ⌘⇧G, paste `~/raycast-scripts`, press Enter and click **Open**.
 
-Every script in the folder shows up as a command. Rain and Thunderstorm compile their Swift overlay on the first run, so that one takes a few seconds.
+Every script in the folder shows up as a command. Each Swift overlay compiles on its first run, so that one takes a few seconds.
 
 To get new commands later, `git pull` in the folder.
 
@@ -32,4 +34,6 @@ To get new commands later, `git pull` in the folder.
 ```bash
 ./rain             # rain for 12 seconds
 ./rain storm 20    # thunderstorm for 20 seconds
+./rain money       # money rain for 8 seconds
+./spotlight        # cursor spotlight until you kill it
 ```
