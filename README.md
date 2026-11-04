@@ -9,8 +9,20 @@ A collection of [Raycast](https://raycast.com) script commands.
 | **God Rays** ☀️ | Warm sunbeams fan down from the top corner, with dust drifting in the light. |
 | **Money Rain** 💸 | Bills and coins tumble down your screen instead of raindrops. |
 | **Spotlight** 🔦 | Dims everything except a soft circle that follows your cursor. Run it again to turn it off. |
+| **Tornado** 🌪️ | A dust funnel spins up, wanders across the screen and breaks apart. |
+| **Bird Flock** 🐦 | A murmuration sweeps across a sunset-tinted screen. |
+| **Earthquake** 🫨 \* | Your screen shakes for a few seconds. |
+| **Glitch** 📺 \* | Your screen tears into RGB-shifted slices. |
+| **Heatwave** 🥵 \* | Your windows shimmer like asphalt in August. |
+| **Pixel Dissolve** 👾 \* | Your screen blows away as dust, left to right, and comes back. |
+| **Black Hole** 🕳️ \* | A black hole opens at the cursor and swirls the screen into it. |
+| **Gravity Flip** 🙃 \* | Your screen breaks into chunks that tumble off the bottom edge. |
 
-The overlays ignore clicks, so you can keep working while it rains. The weather ones fade out on their own.
+Every command's title starts with **FX:**, so typing `fx` in Raycast lists them all.
+
+\* These start from a screenshot, so Raycast needs Screen Recording permission. The first run asks for it; turn Raycast on in **System Settings → Privacy & Security → Screen & System Audio Recording** and run the command again.
+
+The overlays ignore clicks, so you can keep working while it rains. All but Spotlight fade out on their own.
 
 ## Install
 
@@ -30,7 +42,7 @@ Every script in the folder shows up as a command. Each Swift overlay compiles on
 
 To get new commands later, `git pull` in the folder.
 
-## Weather from the terminal
+## From the terminal
 
 ```bash
 ./rain             # rain for 12 seconds
@@ -38,4 +50,6 @@ To get new commands later, `git pull` in the folder.
 ./rain money       # money rain for 8 seconds
 ./rain rays        # god rays for 10 seconds
 ./spotlight        # cursor spotlight until you kill it
+./fx blackhole     # also quake, glitch, heatwave, dissolve, gravity, tornado, flock
+./fx quake 8       # any of them with a custom length in seconds
 ```

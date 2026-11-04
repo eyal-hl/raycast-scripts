@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # @raycast.schemaVersion 1
-# @raycast.title God Rays
+# @raycast.title FX: God Rays
 # @raycast.mode silent
 # @raycast.icon ☀️
 # @raycast.packageName Weather

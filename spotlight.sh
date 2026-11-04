@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # @raycast.schemaVersion 1
-# @raycast.title Spotlight
+# @raycast.title FX: Spotlight
 # @raycast.description Dim everything except a circle around the cursor. Run again to turn off.
 # @raycast.mode silent
 # @raycast.icon 🔦

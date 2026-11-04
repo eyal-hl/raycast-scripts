@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # @raycast.schemaVersion 1
-# @raycast.title Thunderstorm
+# @raycast.title FX: Thunderstorm
 # @raycast.mode silent
 # @raycast.icon ⛈️
 # @raycast.packageName Weather
