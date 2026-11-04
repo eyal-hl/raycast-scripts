@@ -6,6 +6,7 @@ A collection of [Raycast](https://raycast.com) script commands.
 |---------|--------------|
 | **Rain** 🌧️ | Confetti's gloomy cousin: grey sky, clouds and steady rain over your screen for a few seconds. |
 | **Thunderstorm** ⛈️ | Darker sky, heavier rain, lightning. |
+| **God Rays** ☀️ | Warm sunbeams fan down from the top corner, with dust drifting in the light. |
 | **Money Rain** 💸 | Bills and coins tumble down your screen instead of raindrops. |
 | **Spotlight** 🔦 | Dims everything except a soft circle that follows your cursor. Run it again to turn it off. |
 
@@ -35,5 +36,6 @@ To get new commands later, `git pull` in the folder.
 ./rain             # rain for 12 seconds
 ./rain storm 20    # thunderstorm for 20 seconds
 ./rain money       # money rain for 8 seconds
+./rain rays        # god rays for 10 seconds
 ./spotlight        # cursor spotlight until you kill it
 ```

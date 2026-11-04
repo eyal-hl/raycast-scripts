@@ -1,12 +1,13 @@
 // Gloomy rain overlay for Raycast. Build: swiftc -O rain.swift -o rain
-// Usage: rain [storm | money] [seconds]
+// Usage: rain [storm | money | rays] [seconds]
 import AppKit
 import QuartzCore
 
 let args = CommandLine.arguments.dropFirst()
 let storm = args.contains("storm")
 let money = args.contains("money")
-let duration = args.compactMap(Double.init).first ?? (storm ? 14 : money ? 8 : 12)
+let rays = args.contains("rays")
+let duration = args.compactMap(Double.init).first ?? (storm ? 14 : money ? 8 : rays ? 10 : 12)
 let rgb = CGColorSpaceCreateDeviceRGB()
 // Tuned on a 14" MacBook at its default 1512pt width; bigger screens scale up from there.
 let referenceWidth: CGFloat = 1512
@@ -159,6 +160,91 @@ func addMoney(_ root: CALayer, _ size: CGSize) {
     }
 }
 
+// Warm sunbeams fanning down from past the top-left corner, with dust drifting in the light.
+func addRays(_ root: CALayer, _ size: CGSize) {
+    let k = size.width / referenceWidth
+    let warmth = CALayer()
+    warmth.frame = CGRect(origin: .zero, size: size)
+    warmth.backgroundColor = CGColor(red: 1, green: 0.72, blue: 0.35, alpha: 1)
+    warmth.opacity = 0.08
+    root.addSublayer(warmth)
+
+    let origin = CGPoint(x: size.width * 0.08, y: size.height * 1.12)
+    let r = hypot(size.width, size.height) * 1.15
+    // Two interleaved sets of beams that sway and shimmer out of step.
+    for group in 0..<2 {
+        let beams = CAGradientLayer()
+        beams.type = .radial
+        beams.bounds = CGRect(x: 0, y: 0, width: r * 2, height: r * 2)
+        beams.position = origin
+        beams.startPoint = CGPoint(x: 0.5, y: 0.5)
+        beams.endPoint = CGPoint(x: 1, y: 1)
+        beams.colors = [0.5, 0.2, 0].map { CGColor(red: 1, green: 0.88, blue: 0.62, alpha: $0) }
+        beams.locations = [0, 0.45, 1]
+
+        let path = CGMutablePath()
+        for i in stride(from: group, to: 10, by: 2) {
+            let a = -0.28 - CGFloat(i) * 0.12 + .random(in: -0.03...0.03)
+            let w = CGFloat.random(in: 0.018...0.045)
+            path.move(to: CGPoint(x: r, y: r))
+            path.addLine(to: CGPoint(x: r + cos(a - w) * r, y: r + sin(a - w) * r))
+            path.addLine(to: CGPoint(x: r + cos(a + w) * r, y: r + sin(a + w) * r))
+            path.closeSubpath()
+        }
+        let mask = CAShapeLayer()
+        mask.frame = beams.bounds
+        mask.path = path
+        beams.mask = mask
+
+        let sway = CABasicAnimation(keyPath: "transform.rotation.z")
+        sway.fromValue = group == 0 ? -0.03 : 0.03
+        sway.toValue = group == 0 ? 0.03 : -0.03
+        sway.duration = group == 0 ? 7 : 9
+        sway.autoreverses = true
+        sway.repeatCount = .infinity
+        mask.add(sway, forKey: "sway")
+
+        let shimmer = CABasicAnimation(keyPath: "opacity")
+        shimmer.fromValue = 1
+        shimmer.toValue = 0.55
+        shimmer.duration = group == 0 ? 2.3 : 3.1
+        shimmer.autoreverses = true
+        shimmer.repeatCount = .infinity
+        beams.add(shimmer, forKey: "shimmer")
+
+        // Sublayers of the beams, so the mask only shows dust where the light is.
+        for _ in 0..<40 {
+            let mote = CALayer()
+            let d = CGFloat.random(in: 1.5...3.5) * k
+            mote.bounds = CGRect(x: 0, y: 0, width: d, height: d)
+            mote.cornerRadius = d / 2
+            mote.backgroundColor = CGColor(red: 1, green: 0.95, blue: 0.82, alpha: 1)
+            let p = CGPoint(x: .random(in: 0...size.width) - origin.x + r, y: .random(in: 0...size.height) - origin.y + r)
+            mote.position = p
+            let float = CABasicAnimation(keyPath: "position")
+            float.toValue = CGPoint(x: p.x + .random(in: -40...40) * k, y: p.y + .random(in: -30...30) * k)
+            float.duration = .random(in: 4...8)
+            float.autoreverses = true
+            float.repeatCount = .infinity
+            mote.add(float, forKey: "float")
+            let twinkle = CABasicAnimation(keyPath: "opacity")
+            twinkle.fromValue = 0.9
+            twinkle.toValue = 0.2
+            twinkle.duration = .random(in: 1...2.5)
+            twinkle.autoreverses = true
+            twinkle.repeatCount = .infinity
+            mote.add(twinkle, forKey: "twinkle")
+            beams.addSublayer(mote)
+        }
+        root.addSublayer(beams)
+    }
+
+    let fade = CABasicAnimation(keyPath: "opacity")
+    fade.fromValue = 0
+    fade.duration = 2
+    root.add(fade, forKey: "in")
+}
+
 final class Scene {
     let root: CALayer
     let size: CGSize
@@ -227,7 +313,7 @@ for screen in NSScreen.screens {
     view.wantsLayer = true
     window.contentView = view
     window.setFrame(screen.frame, display: false)
-    if money { addMoney(view.layer!, screen.frame.size) } else { scenes.append(Scene(root: view.layer!, size: screen.frame.size)) }
+    if money { addMoney(view.layer!, screen.frame.size) } else if rays { addRays(view.layer!, screen.frame.size) } else { scenes.append(Scene(root: view.layer!, size: screen.frame.size)) }
     roots.append(view.layer!)
     window.orderFrontRegardless()
     windows.append(window)
