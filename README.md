@@ -11,6 +11,8 @@ A collection of [Raycast](https://raycast.com) script commands.
 | **Spotlight** 🔦 | Dims everything except a soft circle that follows your cursor. Run it again to turn it off. |
 | **Tornado** 🌪️ | A dust funnel spins up, wanders across the screen and breaks apart. |
 | **Bird Flock** 🐦 | A murmuration sweeps across a sunset-tinted screen. |
+| **Matrix Rain** 💊 | Green glyph columns pour down a darkened screen. |
+| **Countdown** ⏳ | Huge 3, 2, 1 numbers, then your message (or Go!). |
 | **Earthquake** 🫨 \* | Your screen shakes for a few seconds. |
 | **Glitch** 📺 \* | Your screen tears into RGB-shifted slices. |
 | **Heatwave** 🥵 \* | Your windows shimmer like asphalt in August. |
@@ -50,6 +52,7 @@ To get new commands later, `git pull` in the folder.
 ./rain money       # money rain for 8 seconds
 ./rain rays        # god rays for 10 seconds
 ./spotlight        # cursor spotlight until you kill it
-./fx blackhole     # also quake, glitch, heatwave, dissolve, gravity, tornado, flock
+./fx blackhole     # also quake, glitch, heatwave, dissolve, gravity, tornado, flock, matrix
 ./fx quake 8       # any of them with a custom length in seconds
+./fx countdown "Standup"  # 3, 2, 1, then the message
 ```

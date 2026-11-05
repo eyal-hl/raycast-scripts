@@ -1,11 +1,12 @@
 // Screen-bending overlays for Raycast. Build: swiftc -O fx.swift -o fx
-// Usage: fx quake | glitch | heatwave | dissolve | blackhole | gravity | tornado | flock [seconds]
-// Every mode but tornado and flock starts from a screenshot, so the app running it needs Screen Recording.
+// Usage: fx quake | glitch | heatwave | dissolve | blackhole | gravity | tornado | flock | matrix [seconds]
+//        fx countdown [message] [seconds]
+// Every mode but tornado, flock, matrix and countdown starts from a screenshot, so the app running it needs Screen Recording.
 import AppKit
 import ScreenCaptureKit
 
 let lengths: [String: CGFloat] = ["quake": 4, "glitch": 3, "heatwave": 5, "dissolve": 5,
-                                  "blackhole": 5, "gravity": 4.8, "tornado": 6, "flock": 7]
+                                  "blackhole": 5, "gravity": 4.8, "tornado": 6, "flock": 7, "matrix": 6, "countdown": 4.5]
 let args = CommandLine.arguments.dropFirst()
 guard let mode = args.first(where: { lengths[$0] != nil }) else {
     print("usage: fx \(lengths.keys.sorted().joined(separator: " | ")) [seconds]")
@@ -14,7 +15,9 @@ guard let mode = args.first(where: { lengths[$0] != nil }) else {
 let duration = args.compactMap(Double.init).first.map { CGFloat($0) } ?? lengths[mode]!
 // Each effect is timed for its default length; a custom length stretches the whole timeline.
 let stretch = lengths[mode]! / duration
-let needsSnap = mode != "tornado" && mode != "flock"
+// Countdown shows any other argument after the 1.
+let message = args.first { lengths[$0] == nil && Double($0) == nil } ?? "Go!"
+let needsSnap = !["tornado", "flock", "matrix", "countdown"].contains(mode)
 if needsSnap && !CGPreflightScreenCaptureAccess() {
     CGRequestScreenCaptureAccess()
     exit(1)
@@ -289,8 +292,75 @@ func flock(_ s: Stage) -> Step {
     }
 }
 
+// One glyph drawn at 2x into a 16pt cell.
+func glyph(_ ch: Character, _ c: NSColor) -> CGImage {
+    let ctx = bitmap(32, 32)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+    let text = NSAttributedString(string: String(ch), attributes: [
+        .font: NSFont.monospacedSystemFont(ofSize: 28, weight: .medium), .foregroundColor: c])
+    let size = text.size()
+    text.draw(at: NSPoint(x: (32 - size.width) / 2, y: (32 - size.height) / 2))
+    NSGraphicsContext.restoreGraphicsState()
+    return ctx.makeImage()!
+}
+
+func matrix(_ s: Stage) -> Step {
+    _ = s.fill(color(0, 8, 3, 0.82))
+    let chars = Array("アカサタナハマヤラワ0123456789ABCDEF")
+    let green = chars.map { glyph($0, NSColor(red: 0.2, green: 0.94, blue: 0.43, alpha: 1)) }
+    let white = chars.map { glyph($0, NSColor(red: 0.85, green: 1, blue: 0.88, alpha: 1)) }
+    let H = s.size.height
+    // Each column is a bright head and a 17-glyph tail that fades out behind it.
+    struct Column { var y: CGFloat; let speed: CGFloat; let cells: [CALayer] }
+    var cols = (0..<Int(ceil(s.size.width / 16))).map { i in
+        Column(y: rnd(-H, 0), speed: rnd(140, 320), cells: (0..<18).map { k in
+            let l = s.add(CALayer())
+            l.bounds = CGRect(x: 0, y: 0, width: 16, height: 16)
+            l.position.x = CGFloat(i) * 16 + 8
+            l.opacity = Float(1 - CGFloat(k) / 18)
+            l.contents = (k == 0 ? white : green).randomElement()!
+            return l
+        })
+    }
+    return { _, dt in
+        for i in cols.indices {
+            cols[i].y += cols[i].speed * dt
+            if cols[i].y - 300 > H { cols[i].y = rnd(-200, 0) }
+            for (k, l) in cols[i].cells.enumerated() {
+                l.position.y = cols[i].y - CGFloat(k) * 16
+                if CGFloat.random(in: 0...1) < 0.08 { l.contents = (k == 0 ? white : green).randomElement()! }
+            }
+        }
+    }
+}
+
+// Big 3, 2, 1, each punching in and fading, then the message.
+func countdown(_ s: Stage) -> Step {
+    _ = s.fill(color(0, 0, 0, 0.35))
+    let (W, H) = (s.size.width, s.size.height)
+    let label = s.add(CATextLayer())
+    label.contentsScale = 2
+    label.alignmentMode = .center
+    label.foregroundColor = color(255, 255, 255)
+    label.font = NSFont.systemFont(ofSize: 0, weight: .heavy)
+    label.position = CGPoint(x: W / 2, y: H / 2)
+    return { t, _ in
+        let i = min(3, Int(t)), u = t - CGFloat(i)
+        // Drawn at the largest size it reaches, then scaled down, so the punch-in stays sharp.
+        let size = (i < 3 ? min(W, H) * 0.42 : min(W / 8, 90)) * 1.5
+        label.string = i < 3 ? "\(3 - i)" : message
+        label.fontSize = size
+        label.bounds = CGRect(x: 0, y: 0, width: W, height: size * 1.25)
+        label.opacity = Float(i < 3 ? 1 - clamp01((u - 0.65) / 0.35) : 1)
+        let sc = (1.5 - 0.5 * ease(min(1, u / 0.25))) / 1.5
+        label.setAffineTransform(CGAffineTransform(scaleX: sc, y: sc))
+    }
+}
+
 let effects: [String: (Stage) -> Step] = ["quake": quake, "glitch": glitch, "heatwave": heatwave, "dissolve": dissolve,
-                                          "blackhole": blackhole, "gravity": gravity, "tornado": tornado, "flock": flock]
+                                          "blackhole": blackhole, "gravity": gravity, "tornado": tornado, "flock": flock,
+                                          "matrix": matrix, "countdown": countdown]
 
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
